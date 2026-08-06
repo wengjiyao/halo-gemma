@@ -120,6 +120,9 @@ export function AdvancedSection({ config, setConfig }: AdvancedSectionProps) {
     }
     return flags
   })
+  const [promptProfile, setPromptProfileState] = useState<'official' | 'halo' | 'gemma'>(
+    config?.agent?.promptProfile ?? 'halo'
+  )
   const [developerMode, setDeveloperModeState] = useState(config?.agent?.developerMode ?? false)
   const [capsPanelOpen, setCapsPanelOpen] = useState(false)
   const [engineAvailability, setEngineAvailability] = useState<EngineAvailabilityReport | null>(null)
@@ -241,6 +244,17 @@ export function AdvancedSection({ config, setConfig }: AdvancedSectionProps) {
           [key]: config?.agent?.[key] ?? group.configDefault ?? false,
         }))
       }
+    }
+  }
+
+  const handlePromptProfileChange = async (profile: 'official' | 'halo' | 'gemma') => {
+    if (profile === promptProfile) return
+    setPromptProfileState(profile)
+    try {
+      await saveAgentConfig({ promptProfile: profile })
+    } catch (error) {
+      console.error('[AdvancedSection] Failed to update promptProfile:', error)
+      setPromptProfileState(config?.agent?.promptProfile ?? 'halo')
     }
   }
 
@@ -442,6 +456,45 @@ export function AdvancedSection({ config, setConfig }: AdvancedSectionProps) {
             }}
             className="w-24 px-3 py-1.5 text-sm bg-secondary border border-border rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
+        </div>
+
+        {/* Prompt Profile */}
+        <div className="pt-4 border-t border-border">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="font-medium">{t('Prompt Profile')}</p>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            {t('System prompt style sent to the AI model. Use Gemma for local Gemma models via Ollama.')}
+          </p>
+          <div className="space-y-2">
+            {(['halo', 'official', 'gemma'] as const).map(profile => (
+              <label
+                key={profile}
+                className="flex items-start gap-3 p-3 rounded-lg border border-border transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5 cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  type="radio"
+                  name="promptProfile"
+                  value={profile}
+                  checked={promptProfile === profile}
+                  onChange={() => handlePromptProfileChange(profile)}
+                  className="mt-0.5 accent-primary"
+                />
+                <div>
+                  <p className="font-medium text-sm">
+                    {profile === 'halo' && t('Halo (Default)')}
+                    {profile === 'official' && t('Official')}
+                    {profile === 'gemma' && t('Gemma')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {profile === 'halo' && t('Halo-optimized prompt with web research strategy. Best for Claude and frontier models.')}
+                    {profile === 'official' && t('Base prompt without Halo-specific optimizations.')}
+                    {profile === 'gemma' && t('Compact prompt for Gemma models via Ollama. Shorter context, no Claude-specific references.')}
+                  </p>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Developer Mode */}

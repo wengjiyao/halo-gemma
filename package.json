@@ -1,5 +1,5 @@
 {
-  "name": "halo",
+  "name": "halo-gemma",
   "version": "2.1.14-rc.4",
   "description": "AI that gets things done",
   "type": "module",
@@ -187,7 +187,6 @@
     "vitest": "^1.6.1"
   },
   "optionalDependencies": {
-    "@hello-halo/agent-sdk": "file:src/sdk/halo-sdk",
     "@parcel/watcher-darwin-arm64": "^2.5.6",
     "@parcel/watcher-darwin-x64": "^2.5.6",
     "@parcel/watcher-linux-x64-glibc": "^2.5.6",

@@ -23,6 +23,33 @@
 
 import type { ModelOption } from '../types/ai-sources'
 
+// ============================================================================
+// Gemma 4 Capability Preset
+// ============================================================================
+
+/**
+ * Capability preset for Gemma 4 models (gemma4:4b, gemma4:12b, gemma4:26b).
+ * contextWindow: 128K tokens; maxOutputTokens: 8192; vision: supported.
+ */
+export const GEMMA4_CAPABILITIES = {
+  contextWindow: 131072,
+  maxOutputTokens: 8192,
+  supportsVision: true,
+} as const
+
+/**
+ * Return Gemma 4 capability preset if modelId matches; otherwise undefined.
+ * Callers use this to pre-fill model config without manual settings entry.
+ */
+export function getGemma4Preset(modelId: string | undefined | null): typeof GEMMA4_CAPABILITIES | undefined {
+  if (!modelId) return undefined
+  return modelId.toLowerCase().startsWith('gemma4') ? GEMMA4_CAPABILITIES : undefined
+}
+
+// ============================================================================
+// Vision Capability Detection
+// ============================================================================
+
 /**
  * Known non-vision model patterns (blacklist).
  * Matched via modelId.toLowerCase().includes(pattern).
@@ -40,7 +67,7 @@ const NON_VISION_PATTERNS: string[] = [
   'qwen-coder', 'qwen2.5-coder', 'qwen3-coder', 'qwen-math', 'qwq',
   // Microsoft Phi family
   'phi-2', 'phi-3-mini', 'phi-3-small', 'phi-3-medium', 'phi-4-mini',
-  // Google Gemma
+  // Google legacy Gemma (non-vision variants)
   'gemma-2', 'codegemma',
   // NVIDIA
   'nemotron',
@@ -144,37 +171,3 @@ export function resolveModelVision(
   return model ? supportsVision(model) : supportsVisionById(modelId)
 }
 
-/**
- * Known reasoning model prefixes.
- *
- * OpenAI's reasoning family (o1, o3, o4-mini, gpt-5 thinking variants)
- * deprecates `max_tokens` and only accepts `max_completion_tokens`. Matching
- * these ids lets the OpenAI-compat router emit the right field and avoid an
- * upstream 400. Prefixes are matched with a token-boundary guard (see
- * {@link isReasoningModelById}) so substrings like "gpt-4o-1" are not trapped
- * and version suffixes (e.g. `-2024-12-17`, `-mini`) are still covered.
- */
-const REASONING_MODEL_PREFIXES: string[] = [
-  // OpenAI reasoning family — rejects max_tokens, accepts max_completion_tokens
-  'o1', 'o3', 'o4',
-  // GPT-5 thinking variants — same restriction
-  'gpt-5-thinking', 'gpt-5-reasoning'
-]
-
-/**
- * Check whether a model id belongs to a reasoning model that requires
- * `max_completion_tokens` instead of `max_tokens` on OpenAI-compatible
- * Chat Completions endpoints. Used by the openai-compat router where only
- * the request body's `model` string is available.
- */
-export function isReasoningModelById(modelId: string | undefined | null): boolean {
-  if (!modelId) return false
-  const lower = modelId.toLowerCase()
-  return REASONING_MODEL_PREFIXES.some((prefix) => {
-    if (!lower.startsWith(prefix)) return false
-    // Token-boundary guard: require end-of-string, '-', or '.' after the
-    // prefix so substrings like "o1" in "gpt-4o-1" are not trapped.
-    const next = lower[prefix.length]
-    return next === undefined || next === '-' || next === '.'
-  })
-}

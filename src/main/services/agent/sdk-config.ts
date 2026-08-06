@@ -27,21 +27,6 @@ import {
 } from '../../../shared/constants/model-runtime-limits'
 
 // ============================================
-// Configuration
-// ============================================
-
-/**
- * When true, Anthropic requests route through the local router for interceptor
- * coverage (warmup, preflight, etc.) with zero-conversion passthrough.
- * When false, Anthropic requests go directly to the API via the SDK's built-in
- * HTTP client — no router, no interceptors, no overhead.
- *
- * Toggle this to A/B test proxy overhead vs direct SDK performance.
- * OpenAI/OAuth providers always route through the router regardless of this flag.
- */
-const PROXY_ANTHROPIC = true
-
-// ============================================
 // Types
 // ============================================
 
@@ -192,8 +177,8 @@ export interface BaseSdkOptionsParams {
   mcpServers?: Record<string, any> | null
   /** Maximum tool call turns per message (from config) */
   maxTurns?: number
-  /** System prompt profile ('official' | 'halo') */
-  promptProfile?: 'official' | 'halo'
+  /** System prompt profile ('official' | 'halo' | 'gemma') */
+  promptProfile?: 'official' | 'halo' | 'gemma'
   /** Claude CLI config directory mode */
   configDirMode?: 'halo' | 'cc' | 'custom'
   /** Custom config dir path (when configDirMode === 'custom') */
@@ -261,47 +246,24 @@ function buildDisallowedTools(
 export async function resolveCredentialsForSdk(
   credentials: ApiCredentials
 ): Promise<ResolvedSdkCredentials> {
-  console.debug(`[SDK Config] resolveCredentialsForSdk: provider=${credentials.provider}, model=${credentials.model}, baseUrl=${credentials.baseUrl}`)
-  // Experimental: route Anthropic through local router for interceptor coverage
-  if (PROXY_ANTHROPIC && credentials.provider === 'anthropic') {
-    return resolveAnthropicPassthrough(credentials)
-  }
+  console.debug(`[SDK Config] resolveCredentialsForSdk: model=${credentials.model}, baseUrl=${credentials.baseUrl}`)
 
-  // ── Original logic (identical to pre-optimization code) ──
-  // Start with direct values
-  let anthropicBaseUrl = credentials.baseUrl
-  let anthropicApiKey = credentials.apiKey
+  // Always route through OpenAI compat router → Ollama at localhost:11434
+  const router = await ensureOpenAICompatRouter({ debug: false })
+  const apiType = credentials.apiType || inferOpenAIWireApi(credentials.baseUrl)
+  const anthropicBaseUrl = router.baseUrl
+  const anthropicApiKey = encodeBackendConfig(credentialsToBackendConfig(credentials, { apiType }))
   let sdkModel = resolveModelId(credentials.model)
   const displayModel = credentials.displayModel || credentials.model
 
-  // For non-Anthropic providers (openai or OAuth), use the OpenAI compat router
-  if (credentials.provider !== 'anthropic') {
-    const router = await ensureOpenAICompatRouter({ debug: false })
-    anthropicBaseUrl = router.baseUrl
-
-    // Use apiType from credentials (set by provider), fallback to inference
-    const apiType = credentials.apiType
-      || (credentials.provider === 'oauth' ? 'chat_completions' : inferOpenAIWireApi(credentials.baseUrl))
-
-    // Encode with real wire id BEFORE sdkModel decoration so [1m] never leaks upstream.
-    anthropicApiKey = encodeBackendConfig(credentialsToBackendConfig(credentials, { apiType }))
-
-    console.log(`[SDK Config] ${credentials.provider} provider: routing via ${anthropicBaseUrl}, apiType=${apiType}, sdkModel=${sdkModel}`)
-  }
+  console.log(`[SDK Config] Routing to Ollama via ${anthropicBaseUrl}, model=${sdkModel}`)
 
   const decoratedSdkModel = applyCC1mContextUnlock(sdkModel, credentials.capabilities)
   if (decoratedSdkModel !== sdkModel) {
-    console.log(`[SDK Config] CC 1M context unlock: sdkModel "${sdkModel}" → "${decoratedSdkModel}" (contextWindow=${credentials.capabilities?.contextWindow})`)
     sdkModel = decoratedSdkModel
   }
 
-  return {
-    anthropicBaseUrl,
-    anthropicApiKey,
-    sdkModel,
-    displayModel,
-    capabilities: credentials.capabilities,
-  }
+  return { anthropicBaseUrl, anthropicApiKey, sdkModel, displayModel, capabilities: credentials.capabilities }
 }
 
 /**
@@ -391,38 +353,6 @@ export function computeSessionInputsFingerprint(sdkOptions: Record<string, any>)
   return createHash('sha256').update(material).digest('hex').slice(0, 16)
 }
 
-/**
- * Resolve Anthropic credentials via local router passthrough (experimental).
- * Isolated from the main path — only called when PROXY_ANTHROPIC = true.
- */
-async function resolveAnthropicPassthrough(
-  credentials: ApiCredentials
-): Promise<ResolvedSdkCredentials> {
-  const router = await ensureOpenAICompatRouter({ debug: false })
-  const configUrl = credentials.baseUrl.replace(/\/+$/, '') + '/v1/messages'
-
-  // Encode with real wire id; router strips any [1m] suffix before forwarding.
-  const anthropicApiKey = encodeBackendConfig(
-    credentialsToBackendConfig(credentials, { url: configUrl, apiType: 'anthropic_passthrough' })
-  )
-
-  let sdkModel = resolveModelId(credentials.model)
-  const decoratedSdkModel = applyCC1mContextUnlock(sdkModel, credentials.capabilities)
-  if (decoratedSdkModel !== sdkModel) {
-    console.log(`[SDK Config] CC 1M context unlock (anthropic passthrough): sdkModel "${sdkModel}" → "${decoratedSdkModel}" (contextWindow=${credentials.capabilities?.contextWindow})`)
-    sdkModel = decoratedSdkModel
-  }
-
-  console.log(`[SDK Config] Anthropic passthrough: routing via ${router.baseUrl}`)
-
-  return {
-    anthropicBaseUrl: router.baseUrl,
-    anthropicApiKey,
-    sdkModel,
-    displayModel: credentials.displayModel || credentials.model,
-    capabilities: credentials.capabilities,
-  }
-}
 
 // ============================================
 // Sandbox Settings (written to settings.json)

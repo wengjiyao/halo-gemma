@@ -7,9 +7,8 @@ import { convertAnthropicMessagesToOpenAIChat } from '../messages'
 import {
   convertAnthropicToolsToOpenAIChat,
   convertAnthropicToolChoiceToOpenAIChat,
-  convertAnthropicThinkingToChatReasoningEffort
 } from '../tools'
-import { supportsVisionById, isReasoningModelById } from '../../../../shared/constants/model-capabilities'
+import { supportsVisionById } from '../../../../shared/constants/model-capabilities'
 import { buildStreamOptionsIncludeUsage } from './stream-options'
 import { resolveOutputTokenLimit } from './max-tokens'
 import type { ConvertRequestOptions } from './types'
@@ -61,42 +60,24 @@ export function convertAnthropicToOpenAIChat(
     openaiRequest.stream_options = buildStreamOptionsIncludeUsage()
   }
 
-  // OpenAI reasoning models (o1/o3/o4-mini, gpt-5 thinking variants) reject
-  // `max_tokens` with HTTP 400 and only accept `max_completion_tokens`. Route
-  // the value to the correct field based on the model family.
+  // Gemma 4 via Ollama always uses max_tokens (not max_completion_tokens).
   const outputTokens = resolveOutputTokenLimit(anthropicRequest.max_tokens)
   if (outputTokens !== undefined) {
-    if (isReasoningModelById(anthropicRequest.model)) {
-      openaiRequest.max_completion_tokens = outputTokens
-    } else {
-      openaiRequest.max_tokens = outputTokens
-    }
+    openaiRequest.max_tokens = outputTokens
+  }
+
+  // Disable Ollama's native thinking when the Anthropic request doesn't enable it.
+  // Gemma 4 generates <think> tags by default; without this, thinking tokens consume
+  // the entire max_tokens budget leaving no room for actual response text.
+  const thinkingEnabled = anthropicRequest.thinking?.type === 'enabled' || anthropicRequest.thinking?.type === 'adaptive'
+  if (!thinkingEnabled) {
+    ;(openaiRequest as any).think = false
   }
 
   // Add tools if present
   if (tools && tools.length > 0) {
     openaiRequest.tools = tools
     openaiRequest.tool_choice = convertAnthropicToolChoiceToOpenAIChat(anthropicRequest.tool_choice)
-  }
-
-  // Convert thinking -> reasoning_effort (top-level string per Chat Completions spec)
-  const reasoningEffort = convertAnthropicThinkingToChatReasoningEffort(anthropicRequest.thinking)
-  if (reasoningEffort) {
-    openaiRequest.reasoning_effort = reasoningEffort
-  }
-
-  // Ensure every assistant message carries the reasoning_content field when
-  // thinking mode is active OR thinking blocks are present in the conversation
-  // history. This handles providers (DeepSeek et al.) that require the field on
-  // ALL assistant messages once any thinking content exists in the conversation.
-  const hasThinkingInConversation = openaiRequest.messages
-    .some((m) => m.role === 'assistant' && 'reasoning_content' in m)
-  if (reasoningEffort || hasThinkingInConversation) {
-    for (const msg of openaiRequest.messages) {
-      if (msg.role === 'assistant' && !('reasoning_content' in msg)) {
-        ;(msg as unknown as Record<string, unknown>).reasoning_content = ''
-      }
-    }
   }
 
   if (stripImages && hasImages) {

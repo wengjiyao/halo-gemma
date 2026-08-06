@@ -209,6 +209,14 @@
       "maxOutputTokens": 16384,
       "vision": false,
       "thinking": false
+    },
+    "gemma4": {
+      "displayName": "Gemma 4",
+      "provider": "ollama",
+      "contextWindow": 131072,
+      "maxOutputTokens": 32768,
+      "vision": true,
+      "thinking": false
     }
   },
   "models": {

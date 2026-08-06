@@ -138,7 +138,7 @@ export function InputArea({ onSend, onInject, onStop, isGenerating, placeholder,
   const [isDragOver, setIsDragOver] = useState(false)
   const [isProcessingImages, setIsProcessingImages] = useState(false)
   const [imageError, setImageError] = useState<ImageError | null>(null)
-  const [thinkingEnabled, setThinkingEnabled] = useState(true)  // Extended thinking mode
+  const [thinkingEnabled, setThinkingEnabled] = useState(false)  // Gemma 4 does not support thinking mode
   const [showAttachMenu, setShowAttachMenu] = useState(false)  // Attachment menu visibility
   // Slash-command autocomplete
   const [slashMenuOpen, setSlashMenuOpen] = useState(false)

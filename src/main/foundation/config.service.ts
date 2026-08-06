@@ -576,7 +576,7 @@ interface HaloConfig {
   // Agent behavior configuration
   agent?: {
     maxTurns: number
-    promptProfile?: 'official' | 'halo'
+    promptProfile?: 'official' | 'halo' | 'gemma'
     configDirMode?: 'halo' | 'cc' | 'custom'
     customConfigDir?: string
     /** Experimental: switch agent engine. 'anthropic' = Claude Code SDK (default), 'halo' = Halo SDK, 'codex' = Codex SDK adapter. */
@@ -821,8 +821,23 @@ const DEFAULT_CONFIG: HaloConfig = {
   },
   aiSources: {
     version: 2,
-    currentId: null,
-    sources: []
+    currentId: 'ollama-default',
+    sources: [{
+      id: 'ollama-default',
+      name: 'Ollama (Local)',
+      provider: 'openai',
+      authType: 'api-key',
+      apiUrl: 'http://localhost:11434/v1',
+      apiKey: 'ollama',
+      model: 'gemma4:26b',
+      availableModels: [
+        { id: 'gemma4:26b', name: 'Gemma 4 27B' },
+        { id: 'gemma4:12b', name: 'Gemma 4 12B' },
+        { id: 'gemma4:4b', name: 'Gemma 4 4B' },
+      ],
+      createdAt: '2025-01-01T00:00:00.000Z',
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    }]
   },
   permissions: {
     fileAccess: 'allow',
@@ -839,7 +854,7 @@ const DEFAULT_CONFIG: HaloConfig = {
   },
   agent: {
     maxTurns: 999,
-    promptProfile: 'halo'
+    promptProfile: 'gemma'
   },
   remoteAccess: {
     enabled: false,
@@ -848,9 +863,9 @@ const DEFAULT_CONFIG: HaloConfig = {
   onboarding: {
     completed: false
   },
-  mcpServers: {},  // Empty by default
-  isFirstLaunch: true,
-  modelConfigSkipped: false
+  mcpServers: {},
+  isFirstLaunch: false,
+  modelConfigSkipped: true
 }
 
 // ============================================================================
