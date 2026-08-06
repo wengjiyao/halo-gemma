@@ -1,382 +1,139 @@
 <div align="center">
 
-<img src="./resources/icon.png" alt="Halo Logo" width="120" height="120">
+<img src="./resources/icon.png" alt="Halo Gemma Logo" width="120" height="120">
 
-# Halo
+# halo-gemma
 
-### Your AI Workstation — For Teams and Individuals
+### A locally-running AI agent desktop app powered by Gemma 4 via Ollama
 
-Deploy locally. Automate everything, around the clock. AI Digital Humans work while you make the calls.
-
-[![GitHub Stars](https://img.shields.io/github/stars/openkursar/hello-halo?style=social)](https://github.com/openkursar/hello-halo/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Web-lightgrey.svg)](#installation)
-[![Downloads](https://img.shields.io/github/downloads/openkursar/hello-halo/total.svg)](https://github.com/openkursar/hello-halo/releases)
-
-[**Download**](#installation) · [**Documentation**](#documentation) · [**Contributing**](#contributing)
-
-**[简体中文](./docs/README.zh-CN.md)** | **[繁體中文](./docs/README.zh-TW.md)** | **[Español](./docs/README.es.md)** | **[Deutsch](./docs/README.de.md)** | **[Français](./docs/README.fr.md)** | **[日本語](./docs/README.ja.md)**
-
-</div>
-<!-- TODO: Replace with a 30-second GIF showing: user types a sentence -> Agent automatically writes code -> files appear in Artifact Rail -> preview the result -->
-<div align="center">
-
-![Space Home](./docs/assets/space_home.jpg)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#installation)
+[![Upstream](https://img.shields.io/badge/upstream-openkursar%2Fhello--halo-orange.svg)](https://github.com/openkursar/hello-halo)
 
 </div>
 
 ---
 
-## Why Halo?
+**halo-gemma** is a fork of [hello-halo](https://github.com/openkursar/hello-halo) stripped down and tuned to run exclusively with **Gemma 4 via [Ollama](https://ollama.com)** — no cloud API keys, no external services, everything on your machine.
 
-Halo is an AI workstation powered by frontier Agent with a pluggable engine architecture — supporting [Claude Code](https://github.com/anthropics/claude-code), [Codex](https://github.com/openai/codex), and more. With a complete product layer totaling over 300,000 lines of code, validated by tens of thousands of users, and running stably in enterprise environments, Halo delivers:
-
-| What Halo delivers |
-|:---:|
-| **Your Daily AI Partner** — coding, product design, operations, writing, research — your everyday work companion |
-| **100% Local, Zero Cloud Dependency** — data never leaves your machine, meets enterprise compliance requirements |
-| **AI Digital Humans** — AI workers running autonomously 7x24, handling monitoring, reports, and routine operations |
-| **AI Browser** — embedded browser directly controlled by AI, automate any web-based system |
-| **WeCom / WeChat Native Control** — manage AI agents from enterprise IM, zero training cost |
-| **Remote Access** — control from phone / H5 / WeChat / Android, managers review progress on the go |
-| **Download and Go** — zero configuration, no backend required, IT deploys in minutes |
-
-> 100% compatible with Claude Code's Agent capabilities, MCP, and Skills.
+It uses the [Claude Code SDK](https://github.com/anthropics/claude-code) as its agent loop engine, with an in-process OpenAI-compatibility router that bridges Claude Code's Anthropic-format requests to Ollama's local API.
 
 ---
 
-## AI Digital Humans — Your Autonomous AI Workforce
+## What's different from upstream hello-halo
 
-Traditional RPA follows rigid scripts and breaks when anything changes. Halo takes a different approach: **AI makes the decisions, Halo Browser Actions handle the operations.** The result is automation that understands context, adapts to changes, and executes with precision.
+| Area | hello-halo | halo-gemma |
+|------|-----------|------------|
+| Providers | 20+ cloud providers (Anthropic, OpenAI, Google, etc.) | Ollama only |
+| Models | Any supported model | Gemma 4 (26B, 12B, 4B) |
+| API keys | Required for cloud providers | Not required — `ollama` placeholder |
+| Thinking mode | Enabled by default for reasoning models | Disabled (`think: false` sent to Ollama) |
+| Setup wizard | Shown on first launch | Skipped — pre-configured for Ollama |
+| System prompt | `official` / `halo` profiles | Added `gemma` profile (compact, no Claude-specific references) |
+| Model capabilities | Claude-centric defaults | `gemma4` pattern: 131K context, 32K output |
 
-### Autonomous Agents Running 7x24
+---
 
-Create an AI Digital Human, give it a task and an execution frequency, and it runs autonomously on schedule. No screen to watch, no scripts to babysit.
+## Prerequisites
 
-**Social & Content Platform Automation:**
+- [Ollama](https://ollama.com) running locally on port `11434`
+- Gemma 4 model pulled:
 
-- Auto-reply to comments and DMs on Xiaohongshu, Bilibili, Zhihu
-- Publish scheduled content across Twitter / X, WeChat Official Accounts
-- Monitor brand mentions and competitor activity, generate daily digests
-- Track trending topics and automatically draft content suggestions
-
-**Enterprise Internal Automation:**
-
-- Patrol internal OA / CRM / ERP systems, flag overdue tickets and anomalies
-- Generate daily standup reports from Jira / GitLab / GitHub activity
-- Monitor CI/CD pipelines, notify on build failures, auto-create incident tickets
-- Run scheduled compliance checks on internal dashboards
-- Collect cross-department data and assemble weekly executive summaries
-
-Install with one click from the **AI Digital Human Store**, deploy a **private store** for your organization, or create your own using natural language.
-
-> Think of it as cron + RPA + AI Agent in one — except you just describe what you want in plain language.
-
-AI Digital Humans have the exact same Agent capabilities as conversation mode — the same Claude engine, MCP toolchain, and AI Browser — they just trigger automatically on schedule without needing you at the computer.
-
-**WeChat / WeCom is your control panel.** AI Digital Humans support two-way conversational control via personal WeChat / WeCom (Enterprise WeChat) — not just receiving notifications, you can give instructions, check progress, and request reports directly in your enterprise IM.
-
-![AI Digital Human](./docs/assets/ai-digital-human.png)
-
-*See it in action — Digital Humans operating Zhihu, Bilibili, Xiaohongshu & X 7x24 (ready-made Browser Actions available in the store):*
-
-[![中文 点击播放](https://img.shields.io/badge/▶_点击播放-FB7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1yfNuzaEtv/) &nbsp; [![Watch the Video](https://img.shields.io/badge/▶_Watch_the_Video-FB7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1yfNuzaEtv/)
-
-### Halo Browser Action — AI Decides, Scripts Execute
-
-A Browser Action is a special kind of Skill: a reusable `.js` script that performs one concrete operation on one platform. This is what separates Halo from "AI browser agents" that fumble around clicking randomly.
-
-Halo Browser Actions take the RPA approach to reliability: **pre-write reusable scripts for common operations on each platform**. The AI only decides *what* to do and *when* — the script already knows *how*.
-
-Scripts run directly in a real browser via Halo's `browser_run` — with full access to the page DOM, cookies, and internal APIs, just like the Chrome DevTools Console. This works for public platforms and private enterprise systems alike.
-
-**Example: Reading Bilibili notifications**
-
-```js
-// .claude/skills/bili-get-messages/index.js
-async (params) => {
-  const resp = await fetch('https://api.bilibili.com/x/msgfeed/reply?platform=web', {
-    credentials: 'include'  // cookies automatically included, no extra auth
-  }).then(r => r.json())
-
-  return {
-    success: true,
-    notifications: resp.data.items.map(item => ({
-      user: item.user.nickname,
-      comment: item.item.source_content,
-      video_title: item.item.title
-    }))
-  }
-}
+```bash
+ollama pull gemma4:27b   # ~17 GB — recommended
+ollama pull gemma4:12b   # ~8 GB
+ollama pull gemma4:4b    # ~3 GB
 ```
 
-AI calls it with: `browser_run({ file: ".claude/skills/bili-get-messages/index.js" })`
-
-**Example: Enterprise workflow — a Xiaohongshu content operations Digital Human:**
-1. AI decides: time to check for new comments on today's posts
-2. Calls `xhs-get-comments` Action → script fetches comment list via platform API
-3. AI judges: these 5 comments need replies, drafts personalized responses
-4. Calls `xhs-reply-comment` Action → script submits each reply
-
-**Example: Enterprise internal — a DevOps monitoring Digital Human:**
-1. AI decides: time for the hourly infra check
-2. Calls `check-grafana-alerts` Action → script reads alert dashboard via internal API
-3. AI judges: 2 alerts are critical, composes an incident summary
-4. Calls `create-jira-ticket` Action → script creates a P1 ticket with full context
-5. Calls `notify-oncall` Action → pushes alert to WeCom on-call group
-
-**AI decides. Actions execute. Stable, repeatable, auditable.**
-
-Ready-made Browser Actions are available for Xiaohongshu, Bilibili, Zhihu, Twitter / X, WeChat, and more. Enterprise teams can write private Actions for internal systems. The community can contribute and share their own.
-
-Want to build one yourself? A full walkthrough — building an **OA Approval Assistant** that patrols a login-required internal system on a schedule — is in the docs: [**Build a Browser Action Digital Human →**](https://hello-halo.cc/docs/digital-humans/guide-02-build.html)
-
-### Remote Access — Manage Your AI Fleet From Anywhere
-
-Once Remote Access is enabled, your phone / H5 / WeChat / Android client can control Halo on your desktop. During meetings, commuting, or on the road — check Digital Human outputs, approve decisions, and issue new instructions without being at your desk.
-
----
-
-## Quick Start
-
-**Get started in 30 seconds:**
-
-1. [Download and install](#installation), launch Halo
-2. Enter your API Key (Anthropic recommended)
-3. Start chatting — try `Build a todo app with React` or `Help me analyze the code structure of this project`
-4. Watch files appear in the Artifact Rail, click to preview, request changes
-
-> Recommended models: Claude Sonnet / Opus series
+- Node.js 20+, Yarn
 
 ---
 
 ## Installation
 
-### Download (Recommended)
-
-| Platform | Download | Requirements |
-|----------|----------|--------------|
-| **macOS** (Apple Silicon) | [.dmg](https://github.com/openkursar/hello-halo/releases/latest) | macOS 11+ |
-| **macOS** (Intel) | [.dmg](https://github.com/openkursar/hello-halo/releases/latest) | macOS 11+ |
-| **Windows** | [.exe](https://github.com/openkursar/hello-halo/releases/latest) | Windows 10+ |
-| **Linux** | [.AppImage](https://github.com/openkursar/hello-halo/releases/latest) | Ubuntu 20.04+ |
-| **Android** | [.apk](https://github.com/openkursar/hello-halo/releases/latest) | Android 8+ |
-| **iOS** | Build from source | iOS 15+ |
-
-**Download, install, run.** No Node.js, no npm, no terminal needed. IT can distribute across the organization with zero server-side dependencies.
-
-### Build from Source
-
 ```bash
-git clone https://github.com/openkursar/hello-halo.git
-cd hello-halo
-npm install
-npm run prepare
-npm run dev
+git clone https://github.com/wengjiyao/halo-gemma.git
+cd halo-gemma
+yarn install
 ```
 
 ---
 
-## AI Digital Human Store
+## Usage
 
-<table>
-<tr>
-<td width="50%" valign="top">
-
-### For Users — Install and Use Instantly
-
-Open the AI Digital Human Store, pick one, fill in a few configuration fields, and it starts running automatically. No coding required, no prompts to write.
-
-![AI Store](./docs/assets/shop.png)
-
-</td>
-<td width="50%" valign="top">
-
-### For Developers — Build and Publish
-
-Write a `spec.yaml` and submit a PR to the [AI Digital Human Protocol (DHP)](https://github.com/openkursar/digital-human-protocol). Once merged, it becomes immediately available to all Halo users.
-
-You can also write Halo Browser Actions (`.js` scripts) for AI Digital Humans to precisely execute operations on specific platforms.
-
-</td>
-</tr>
-</table>
-
----
-
-## Screenshots
-
-![Chat Intro](./docs/assets/chat_intro.jpg)
-
-![Chat Todo](./docs/assets/chat_todo.jpg)
-
-*Remote Access: Control Halo from anywhere*
-
-![Remote Settings](./docs/assets/remote_setting.jpg)
-
-<p align="center">
-  <img src="./docs/assets/mobile_remote_access.jpg" width="45%" alt="Mobile Remote Access">
-  &nbsp;&nbsp;
-  <img src="./docs/assets/mobile_chat.jpg" width="45%" alt="Mobile Chat">
-</p>
-
-*AI Browser*
-
-https://github.com/user-attachments/assets/2d4d2f3e-d27c-44b0-8f1d-9059c8372003
-
-*Product Walkthrough*
-
-[![中文 点击播放](https://img.shields.io/badge/▶_点击播放-FB7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1jEZYBaEcy/) &nbsp; [![Watch the Demo](https://img.shields.io/badge/▶_Watch_the_Demo-FB7299?style=for-the-badge&logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1jEZYBaEcy/)
-
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────┐
-│                   Halo Desktop                    │
-│                                                   │
-│   React UI  <─IPC─>  Main Process  <──>  Claude  │
-│  (Renderer)          ┌───────────┐       Code SDK │
-│                      │ Digital   │      (Agent    │
-│                      │ Humans    │       Loop)    │
-│                      │ Scheduler │                │
-│                      └───────────┘                │
-│                           │                       │
-│                     ~/.halo/ (local)              │
-└──────────────────────────────────────────────────┘
+**Development mode** (live reload):
+```bash
+yarn dev
 ```
 
+**Production build + run:**
+```bash
+yarn build
+yarn start
+```
+
+The app launches directly into the chat interface — no setup wizard. It connects to Ollama at `http://localhost:11434` automatically.
+
 ---
 
-## More Features
+## How it works
 
-- **100% Local** — Your data never leaves your machine, meets enterprise compliance requirements
-- **No Backend Required** — Pure desktop client, deploy to every workstation with zero server infrastructure
-- **Agent Loop** — Tool execution, not just text generation
-- **Space System** — Isolated workspaces, projects don't interfere with each other
-- **Skills** — Install skill packs to extend Agent capabilities
-- **AI Browser** — Embedded CDP browser, AI directly controls web pages
-- **Multi-Model Support** — Anthropic, OpenAI, DeepSeek, and any OpenAI-compatible API (connect to your enterprise LLM gateway)
-- **Dark/Light Themes** — Follows system preference
-- **Multi-Language** — Chinese, English, Spanish, and more
+```
+User input
+    │
+    ▼
+Claude Code SDK (agent loop)
+    │  Anthropic-format messages
+    ▼
+In-process OpenAI-compat router
+    │  think: false  ·  max_tokens: 32768
+    ▼
+Ollama  →  gemma4:26b
+    │
+    ▼
+Tool calls: web search · AI browser · file system
+```
 
-[**Explore all features →**](https://hello-halo.cc/docs/features/spaces.html)
+- The **Claude Code SDK** handles the multi-turn agent loop, tool dispatch, and context management
+- The **OpenAI-compat router** (built into hello-halo) translates Anthropic-format requests to Ollama's OpenAI-compatible endpoint
+- `think: false` is injected into every request to prevent Gemma 4 from generating `<think>` tokens that would consume the entire output budget
+- The **AI browser** runs as a hidden Electron `BrowserView` — the model navigates real websites without you seeing a window
+
+---
+
+## Key configuration
+
+Model capabilities are registered in `src/shared/data/model-capabilities.json`:
+
+```json
+"gemma4": {
+  "contextWindow": 131072,
+  "maxOutputTokens": 32768,
+  "vision": true,
+  "thinking": false
+}
+```
+
+The default model is `gemma4:26b`. To switch to a lighter model, change `model` in `src/main/foundation/config.service.ts` → `DEFAULT_CONFIG`.
 
 ---
 
 ## Roadmap
 
-- [x] Claude Code SDK Agent Loop
-- [x] Space and Conversation Management
-- [x] Artifact Preview (Code, HTML, Images, Markdown)
-- [x] Remote Access
-- [x] AI Browser (CDP)
-- [x] MCP Server Support
-- [x] Skills System
-- [x] AI Digital Humans and AI Digital Human Store
-- [ ] Third-party Ecosystem Plugin Compatibility
-- [ ] Enhanced Code Editing Experience
-- [ ] Visual Git + AI-Assisted Code Review
-- [ ] AI-Powered File Search
-- [ ] Low-Cost Digital Human Recording — auto-record and replay AI workflows as reusable Digital Humans
+- [ ] Dynamic model list fetched from Ollama (support any locally pulled model)
+- [ ] Support other thinking-capable Ollama models (deepseek-r1, qwq) with thinking enabled
+- [ ] One-click installer / pre-built binary releases
 
 ---
 
-## Contributing
+## Credits
 
-```bash
-git clone https://github.com/openkursar/hello-halo.git
-cd hello-halo
-npm install
-npm run prepare
-npm run dev
-```
-
-- **Translations** — `src/renderer/i18n/`
-- **Bug Reports** — [Issues](https://github.com/openkursar/hello-halo/issues)
-- **Feature Suggestions** — [Discussions](https://github.com/openkursar/hello-halo/discussions)
-- **Code Contributions** — PRs welcome
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
----
-
-## Community
-
-- [GitHub Discussions](https://github.com/openkursar/hello-halo/discussions)
-- [GitHub Issues](https://github.com/openkursar/hello-halo/issues)
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/500aa749-50d9-4587-986d-338b1ed899f1" width="200" alt="Personal WeChat QR Code">
-</p>
-<p align="center">
-  <em>For any feedback or discussion, add WeChat: go2halo with the note "Halo"</em>
-</p>
-
----
-
-## The Story of Halo
-
-In October 2025, a simple frustration: **I wanted to use Claude Code, but I was stuck in meetings all day.**
-
-During a boring meeting, I thought: *What if I could control Claude Code on my home computer from my phone?*
-
-Then came the second problem — non-technical colleagues wanted to use it too, but got stuck at installation. *"What's npm?"*
-
-So I built Halo: a visual interface, one-click install, remote access. The first version took a few hours. Everything after that? **100% built by Halo itself.**
-
-Now, we believe the next step is the **AI Workstation**: AI no longer needs someone watching to get work done. You set the goals, AI Digital Humans push forward autonomously 7x24. Writing code, running tests, monitoring deployments, generating reports — running continuously, with you only making decisions at key checkpoints.
-
-That's what Halo is building.
+This project is a fork of [hello-halo](https://github.com/openkursar/hello-halo) by [OpenKursar](https://github.com/openkursar), licensed under MIT. The agent loop is powered by Anthropic's [Claude Code SDK](https://github.com/anthropics/claude-code). The local LLM runtime is [Ollama](https://ollama.com). Gemma 4 is developed by [Google DeepMind](https://deepmind.google/models/gemma/).
 
 ---
 
 ## License
 
-MIT — [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE).
 
----
-
-<div align="center">
-
-## Contributors
-
-<a href="https://github.com/openkursar/hello-halo/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=openkursar/hello-halo" />
-</a>
-
-**Star this repo** to help more people discover Halo.
-
-</div>
-
----
-
-## Partners & Sponsors
-
-If Halo inspired your project or you built something on top of it, a mention would mean a lot.
-
-### Enterprise Partners
-
-<!-- Add your company logo here — submit a PR or contact us at the link below -->
-
-| Your company uses Halo? | [Let us know](https://github.com/openkursar/hello-halo/issues/new?title=Add+our+company+as+partner) — we'd love to feature you here. |
-|:---:|:---:|
-
-### Sponsors
-
-<a href="https://www.nnscholar.com/">
-  <img src="https://www.nnscholar.com/favicon.ico" height="40" alt="NNScholar">
-</a>
-
-<p align="center">
-  <a href="https://buy.polar.sh/polar_cl_x7bTGvMvt3rbUt6oE98z0zb2zFz1sT7dG37BA3foNsZ">Polar (International)</a> · <a href="https://ifdian.net/a/hello-halo">爱发电 (Alipay / WeChat)</a>
-</p>
-
----
-
-<div align="center">
-
-[Back to Top](#halo)
-
-</div>
+This project retains the original MIT license from hello-halo (Copyright © 2024–2025 OpenKursar) with modifications Copyright © 2026 wengjiyao.
