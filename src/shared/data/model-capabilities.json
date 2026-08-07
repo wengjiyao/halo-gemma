@@ -214,7 +214,7 @@
       "displayName": "Gemma 4",
       "provider": "ollama",
       "contextWindow": 131072,
-      "maxOutputTokens": 32768,
+      "maxOutputTokens": 65536,
       "vision": true,
       "thinking": false
     }

@@ -16,7 +16,7 @@
 
 **halo-gemma** is a fork of [hello-halo](https://github.com/openkursar/hello-halo) stripped down and tuned to run exclusively with **Gemma 4 via [Ollama](https://ollama.com)** — no cloud API keys, no external services, everything on your machine.
 
-It uses the [Claude Code SDK](https://github.com/anthropics/claude-code) as its agent loop engine, with an in-process OpenAI-compatibility router that bridges Claude Code's Anthropic-format requests to Ollama's local API.
+It uses the [Claude Code SDK](https://github.com/anthropics/claude-code) as its agent loop engine. Claude Code SDK is an open-source, Apache 2.0 licensed tool from Anthropic that runs fully locally as a subprocess — no Anthropic API key or cloud connection is required. An in-process OpenAI-compatibility router bridges Claude Code SDK's Anthropic-format requests to Ollama's local API, so Gemma 4 handles all the actual inference.
 
 ---
 
@@ -30,7 +30,7 @@ It uses the [Claude Code SDK](https://github.com/anthropics/claude-code) as its 
 | Thinking mode | Enabled by default for reasoning models | Disabled (`think: false` sent to Ollama) |
 | Setup wizard | Shown on first launch | Skipped — pre-configured for Ollama |
 | System prompt | `official` / `halo` profiles | Added `gemma` profile (compact, no Claude-specific references) |
-| Model capabilities | Claude-centric defaults | `gemma4` pattern: 131K context, 32K output |
+| Model capabilities | Claude-centric defaults | `gemma4` pattern: 131K context, 64K output |
 
 ---
 
@@ -86,7 +86,7 @@ Claude Code SDK (agent loop)
     │  Anthropic-format messages
     ▼
 In-process OpenAI-compat router
-    │  think: false  ·  max_tokens: 32768
+    │  think: false  ·  max_tokens: 65536
     ▼
 Ollama  →  gemma4:26b
     │
@@ -94,7 +94,7 @@ Ollama  →  gemma4:26b
 Tool calls: web search · AI browser · file system
 ```
 
-- The **Claude Code SDK** handles the multi-turn agent loop, tool dispatch, and context management
+- The **Claude Code SDK** (Apache 2.0, runs locally — no Anthropic API key needed) handles the multi-turn agent loop, tool dispatch, session management, and auto-compaction of long conversations
 - The **OpenAI-compat router** (built into hello-halo) translates Anthropic-format requests to Ollama's OpenAI-compatible endpoint
 - `think: false` is injected into every request to prevent Gemma 4 from generating `<think>` tokens that would consume the entire output budget
 - The **AI browser** runs as a hidden Electron `BrowserView` — the model navigates real websites without you seeing a window
@@ -108,7 +108,7 @@ Model capabilities are registered in `src/shared/data/model-capabilities.json`:
 ```json
 "gemma4": {
   "contextWindow": 131072,
-  "maxOutputTokens": 32768,
+  "maxOutputTokens": 65536,
   "vision": true,
   "thinking": false
 }
