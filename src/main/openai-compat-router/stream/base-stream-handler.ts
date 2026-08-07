@@ -211,10 +211,16 @@ export abstract class BaseStreamHandler {
 
       if (!hasActualText && !hasToolCalls) {
         const idx = this.state.contentBlockIndex
+        // When the model produced only a thinking block with no text (Gemma
+        // puts its response inside <think> tags despite think:false), use the
+        // thinking content as the text response so CC SDK sees a non-empty
+        // result. A bare space is rejected by CC SDK's isResultSuccessful check
+        // as empty, causing "Unexpected empty response" every time this occurs.
+        const recoveredText = this.state.accumulatedThinking.trim() || '(no response)'
         this.writer.writeTextBlockStart(idx)
-        this.writer.writeTextDelta(idx, ' ')
+        this.writer.writeTextDelta(idx, recoveredText)
         this.writer.writeBlockStop(idx)
-        console.log(`[StreamHandler] Injected placeholder text block at index ${idx} (model=${this.state.model}, stop=${this.state.stopReason ?? 'null'}, thinking_len=${this.state.accumulatedThinking.length})`)
+        console.log(`[StreamHandler] Recovered thinking-only response as text at index ${idx} (model=${this.state.model}, thinking_len=${this.state.accumulatedThinking.length})`)
       }
     }
 

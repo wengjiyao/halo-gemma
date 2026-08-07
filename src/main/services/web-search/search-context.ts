@@ -128,6 +128,9 @@ export class WebSearchContext {
 
     let lastReason: SearchBlockReason = 'no_results'
     let lastEngine: SearchEngine = engines[0]
+    // Track the first engine that returned a CAPTCHA — its guidance is more
+    // actionable than a generic "no results" from a later fallback engine.
+    let captchaEngine: SearchEngine | null = null
 
     // Try each engine in order
     for (const engine of engines) {
@@ -150,6 +153,9 @@ export class WebSearchContext {
         }
 
         lastReason = outcome.reason
+        if (outcome.reason === 'captcha' && !captchaEngine) {
+          captchaEngine = engine
+        }
         console.log(`[WebSearch] ${engine.displayName} failed (${outcome.reason}), trying next engine`)
       } catch (error) {
         // Unexpected error (not a handled outcome): treat as unreachable.
@@ -160,8 +166,12 @@ export class WebSearchContext {
     }
 
     // All engines failed: surface a structured, actionable failure.
+    // Prefer CAPTCHA guidance when present — it's more actionable ("use browser
+    // to solve verification") than a generic "no results" from a fallback engine.
     const searchTime = Date.now() - startTime
-    const guidance = lastEngine.buildBlockGuidance(lastReason, query)
+    const guidanceEngine = captchaEngine ?? lastEngine
+    const guidanceReason = captchaEngine ? 'captcha' : lastReason
+    const guidance = guidanceEngine.buildBlockGuidance(guidanceReason, query)
 
     console.error(`[WebSearch] All engines failed after ${searchTime}ms (${lastReason})`)
 
@@ -202,9 +212,12 @@ export class WebSearchContext {
       const searchUrl = engine.buildSearchUrl(query, { maxResults })
       console.log(`[WebSearch] URL: ${searchUrl.slice(0, 100)}${searchUrl.length > 100 ? '...' : ''}`)
 
-      // Create offscreen BrowserView
-      console.log(`[WebSearch] Creating offscreen view: ${viewId}`)
-      await browserViewManager.create(viewId, undefined, { offscreen: true })
+      // Create hidden BrowserView attached to the main window at an off-screen
+      // position. Using offscreen:false (normal GPU compositing) rather than
+      // offscreen:true (hidden host window) reduces fingerprinting differences
+      // that cause sites like Bing to serve CAPTCHA pages.
+      console.log(`[WebSearch] Creating hidden view: ${viewId}`)
+      await browserViewManager.create(viewId, undefined, { offscreen: false })
 
       // Get webContents for this view
       const webContents = browserViewManager.getWebContents(viewId)

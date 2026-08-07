@@ -54,6 +54,7 @@ ollama pull gemma4:4b    # ~3 GB
 ```bash
 git clone https://github.com/wengjiyao/halo-gemma.git
 cd halo-gemma
+cp product.example.json product.json   # required — product.json is gitignored
 yarn install
 ```
 

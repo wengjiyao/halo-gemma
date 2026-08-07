@@ -1,13 +1,13 @@
 {
   "$schema": "./product.schema.json",
-  "name": "Halo",
-  "appId": "com.halo.app",
-  "dataFolderName": "halo",
+  "name": "halo-gemma",
+  "appId": "com.halogenma.app",
+  "dataFolderName": "halo-gemma",
   "version": "1.0.0",
   "updateConfig": {
     "provider": "github",
-    "owner": "openkursar",
-    "repo": "hello-halo"
+    "owner": "wengjiyao",
+    "repo": "halo-gemma"
   },
   "authProviders": [
     {
