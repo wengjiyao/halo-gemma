@@ -169,7 +169,10 @@ class GemmaAgent:
         # Setup session persistence
         session_db_path = os.path.expanduser(session_db)
         os.makedirs(os.path.dirname(session_db_path), exist_ok=True)
-        self.checkpointer = SqliteSaver.from_conn_string(session_db_path)
+
+        # Use context manager for SqliteSaver
+        self._checkpointer_cm = SqliteSaver.from_conn_string(session_db_path)
+        self.checkpointer = self._checkpointer_cm.__enter__()
 
         # Build graph
         self.graph = self._build_graph()
