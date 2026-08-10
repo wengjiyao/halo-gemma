@@ -9,6 +9,10 @@
     "owner": "wengjiyao",
     "repo": "halo-gemma"
   },
+  "browserPolicy": {
+    "mode": "allowlist",
+    "allowlist": []
+  },
   "authProviders": [
     {
       "type": "claude",

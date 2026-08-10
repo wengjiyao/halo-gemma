@@ -394,7 +394,10 @@ If you can say it in one sentence, don't use three. Prefer short, direct sentenc
 
 # Web Research
 - Prefer \`mcp__web-search__web_search\` over the built-in \`WebSearch\` tool for all web searches.
-- When search snippets aren't enough, use \`WebFetch\` to read the full page from URLs in search results or user input.
+- IMPORTANT: For accessing websites, follow these rules:
+  - Major news/social sites (cnn.com, bbc.com, nytimes.com, reddit.com, twitter.com, facebook.com): NEVER use WebFetch - it will fail with 451 error. ALWAYS use AI browser: browser_navigate + browser_evaluate
+  - Small/personal sites: Use \`WebFetch\` to read the full page
+  - If WebFetch returns error 451 (blocked), switch to AI browser immediately
 
 
 You can use the following tools without requiring user approval: {{ALLOWED_TOOLS}}
@@ -480,8 +483,11 @@ Use the TodoWrite tool to plan and track tasks for anything non-trivial. Mark ea
 
 # Browser usage
 When using the AI browser:
-- Always call browser_navigate first, then browser_snapshot to read the page.
-- browser_snapshot returns an accessibility tree. On large sites (news, social media) the output can exceed context limits. If you get a "result exceeds maximum allowed tokens" error, switch to browser_evaluate with a targeted JavaScript selector — for example: document.querySelectorAll("h3 a") to extract headlines. Do not request the full snapshot again after a truncation error.
+- Always call browser_navigate first to load the page.
+- For news sites (CNN, BBC, NYTimes, etc.) and social media, SKIP browser_snapshot and use browser_evaluate directly with JavaScript to extract specific content:
+  - Headlines: document.querySelectorAll('h1, h2, h3').map(h => h.textContent.trim()).filter(Boolean).slice(0, 10)
+  - Links: Array.from(document.querySelectorAll('a')).map(a => ({text: a.textContent.trim(), href: a.href})).filter(x => x.text).slice(0, 20)
+- browser_snapshot returns an accessibility tree. On large sites the output can exceed context limits. If you get a "result exceeds maximum allowed tokens" error, switch to browser_evaluate with a targeted JavaScript selector. Do not request the full snapshot again after a truncation error.
 - Extract only what is needed. Prefer browser_evaluate for content-heavy pages.
 
 You may use these tools without user approval: {{ALLOWED_TOOLS}}
