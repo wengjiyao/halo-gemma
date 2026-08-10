@@ -39,16 +39,17 @@ export const BUILTIN_PROVIDERS: BuiltinProvider[] = [
     apiUrl: 'http://localhost:11434/v1',
     modelsUrl: 'http://localhost:11434/v1/models',
     models: [
-      { id: 'gemma4:26b', name: 'Gemma 4 27B' },
-      { id: 'gemma4:12b', name: 'Gemma 4 12B' },
-      { id: 'gemma4:4b', name: 'Gemma 4 4B' },
+      { id: 'gemma4:e4b-mlx', name: 'Gemma 4 E4B MLX (8.8GB)' },
+      { id: 'gemma4:e2b-mlx', name: 'Gemma 4 E2B MLX (6.5GB)' },
+      { id: 'gemma3:4b', name: 'Gemma 3 4B' },
+      { id: 'qwen2.5:7b', name: 'Qwen 2.5 7B' },
     ],
-    description: 'Local Gemma 4 models via Ollama. No API key required.',
+    description: 'Local LLM models via Ollama. No API key required.',
     website: 'https://ollama.com/',
     region: 'global',
     recommended: true,
     icon: 'cpu',
-    notes: 'Run "ollama pull gemma4:26b" to download the model. Ollama must be running at localhost:11434.',
+    notes: 'Run "ollama pull gemma4:e4b-mlx" to download the model. Ollama must be running at localhost:11434.',
   },
 ]
 
