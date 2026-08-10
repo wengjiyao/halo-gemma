@@ -9,6 +9,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)](#installation)
 [![Upstream](https://img.shields.io/badge/upstream-openkursar%2Fhello--halo-orange.svg)](https://github.com/openkursar/hello-halo)
+[![Release](https://img.shields.io/github/v/release/wengjiyao/halo-gemma?label=stable)](https://github.com/wengjiyao/halo-gemma/releases/latest)
+[![Development](https://img.shields.io/badge/dev-feature%2Flanggraph--agent-yellow)](https://github.com/wengjiyao/halo-gemma/tree/feature/langgraph-agent)
 
 </div>
 
@@ -51,12 +53,28 @@ ollama pull gemma4:4b    # ~3 GB
 
 ## Installation
 
+**Stable Release (Recommended):**
 ```bash
-git clone https://github.com/wengjiyao/halo-gemma.git
+# Clone the latest stable release
+git clone --branch v1.0.0 https://github.com/wengjiyao/halo-gemma.git
 cd halo-gemma
 cp product.example.json product.json   # required — product.json is gitignored
 yarn install
 ```
+
+**Development Version (Experimental):**
+```bash
+# Clone main branch (includes unreleased features)
+git clone https://github.com/wengjiyao/halo-gemma.git
+cd halo-gemma
+git checkout main  # stable, but may include recent untagged commits
+# or
+git checkout feature/langgraph-agent  # experimental LangGraph POC
+cp product.example.json product.json
+yarn install
+```
+
+> **Note**: Always use tagged releases (e.g., `v1.0.0`) for production. Development branches may contain untested features.
 
 ---
 
