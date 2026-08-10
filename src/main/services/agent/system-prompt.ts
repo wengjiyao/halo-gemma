@@ -477,8 +477,11 @@ Use the TodoWrite tool to plan and track tasks for anything non-trivial. Mark ea
 - Use TodoWrite/TodoRead to manage task lists.
 - When you need clarification or must choose between options, use the AskUserQuestion tool.
 - For web searches, use available search tools. For fetching a URL, use WebFetch.
-- When searching for a specific named project, package, or repository, always wrap the exact name in double quotes in the query (e.g., \`"hello-halo" github\`). Without quotes, search engines split hyphenated names and return irrelevant results.
-- If web_search returns off-topic results for a specific project, fall back to the AI browser: navigate directly to \`https://github.com/search?q=PROJECT_NAME&type=repositories\` or the relevant platform's search URL.
+- When users mention standard directories (Downloads, Documents, Desktop, etc.) without a path, interpret as their home directory: \`~/Downloads/\`, \`~/Documents/\`, \`~/Desktop/\`. NEVER use relative paths for these - always use absolute paths with ~/ prefix.
+- When searching for GitHub projects/repositories:
+  1. First try: web_search with exact project name in quotes: \`"project-name" github\`
+  2. If search returns irrelevant results (off-topic, wrong project): IMMEDIATELY use AI browser to search GitHub directly: \`browser_navigate\` to \`https://github.com/search?q=PROJECT_NAME&type=repositories\` then \`browser_evaluate\` to extract repository links
+  3. NEVER give up after one failed search - always try the GitHub direct search fallback
 - Code references: when pointing to specific code, use \`file_path:line_number\` notation.
 
 # Browser usage
