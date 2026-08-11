@@ -256,13 +256,9 @@ export async function getApiCredentials(config: ReturnType<typeof getConfig>): P
     console.log(`[Agent] Using OpenAI-compatible API (${currentSource?.provider || 'unknown'}) via AISourceManager`)
   }
 
-  // HARDCODED: Force gemma4:e4b-mlx for Ollama sources
   let modelId = resolveModelId(backendConfig.model)
-  if (currentSource?.provider === 'openai' && currentSource?.apiUrl?.includes('localhost:11434')) {
-    modelId = 'gemma4:e4b-mlx'
-  }
   const modelOption = currentSource?.availableModels?.find(m => m.id === modelId)
-  const displayModel = modelOption?.name || 'Gemma 4 E4B MLX'
+  const displayModel = modelOption?.name || modelId
   // Capabilities MUST resolve against the wire model id. Both the preset
   // patterns in model-capabilities.json (e.g. "claude-opus-", "deepseek-chat")
   // and the user's per-model overrides (keyed in ModelConfigPanel by the
@@ -335,13 +331,9 @@ export async function getApiCredentialsForSource(
     provider = 'openai'
   }
 
-  // HARDCODED: Force gemma4:e4b-mlx for Ollama sources
   let effectiveModelId = backendConfig.model || source.model
-  if (source.provider === 'openai' && source.apiUrl?.includes('localhost:11434')) {
-    effectiveModelId = 'gemma4:e4b-mlx'
-  }
   const modelOption = source.availableModels?.find((m: any) => m.id === effectiveModelId)
-  const displayModel = modelOption?.name || 'Gemma 4 E4B MLX'
+  const displayModel = modelOption?.name || effectiveModelId
   // Per-app overrides still belong to the same source — resolve capabilities
   // from that source's modelOverrides so apps inherit user-configured limits.
   // Always use the wire model id here (see getApiCredentials for full
