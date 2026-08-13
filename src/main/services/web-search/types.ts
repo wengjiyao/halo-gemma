@@ -91,7 +91,7 @@ export interface SearchOptions {
   /** Maximum number of results to return (default: 8, max: 20) */
   maxResults?: number
   /** Preferred search engine (default: 'auto') */
-  engine?: 'bing' | 'baidu' | 'google' | 'tavily' | 'auto'
+  engine?: 'bing' | 'baidu' | 'google' | 'tavily' | 'github' | 'auto'
   /** Search language hint (default: auto-detect from query) */
   language?: string
   /** Search timeout in milliseconds (default: 15000) */

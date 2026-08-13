@@ -28,9 +28,13 @@ function buildWebSearchTool() {
 This tool performs a real web search and returns structured results with titles, URLs, and snippets.
 
 Engines:
-- "auto" (default): Automatically selects the best engine based on availability and query language.
-  Priority order: Google (if available) → Bing → Tavily → Baidu
-  Google is auto-detected at startup; if unreachable (no VPN/proxy), Bing becomes primary.
+- "auto" (default): Automatically selects the best engine based on query content and availability.
+  Priority examples:
+  * "halo-gemma github repo" → GitHub (90) → Google → Bing → Tavily → Baidu
+  * "python open source project" → GitHub (85) → Google → Bing → Tavily → Baidu
+  * "latest news" → Google/Bing (high) → Tavily → Baidu → GitHub (low)
+  * "中文内容" → Baidu (85) → Google → GitHub → Bing → Tavily
+- "github": Search GitHub repositories (best for finding open source projects/code).
 - "google": Use Google search (may require VPN/proxy in some regions).
 - "bing": Use Bing search (reliable international option).
 - "tavily": Use Tavily API (good fallback when scraping engines fail).
@@ -58,12 +62,12 @@ Returns: A list of search results, each with title, URL, and snippet.`,
         .optional()
         .describe('Maximum number of results to return (default: 8, max: 20)'),
       engine: z
-        .enum(['auto', 'bing', 'baidu', 'google', 'tavily'])
+        .enum(['auto', 'bing', 'baidu', 'google', 'tavily', 'github'])
         .optional()
         .describe(
-          'Search engine to use. "auto" (default) automatically selects best engine: ' +
-          'Google (if available) → Bing → Tavily → Baidu. Prefer "auto" for best results. ' +
-          'Specify an engine explicitly only when needed for specific requirements.'
+          'Search engine to use. "auto" (default) automatically selects best engine based on query: ' +
+          'GitHub for code/repos, Google/Bing for general, Baidu for Chinese. Prefer "auto" for best results. ' +
+          'Specify an engine explicitly only when needed (e.g., "github" to only search repositories).'
         ),
     },
     async (args) => {
