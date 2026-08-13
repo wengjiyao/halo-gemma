@@ -30,11 +30,15 @@ This tool performs a real web search and returns structured results with titles,
 Engines:
 - "auto" (default): Automatically selects the best engine based on query content and availability.
   Priority examples:
-  * "halo-gemma github repo" → GitHub (90) → Google → Bing → Tavily → Baidu
-  * "python open source project" → GitHub (85) → Google → Bing → Tavily → Baidu
-  * "latest news" → Google/Bing (high) → Tavily → Baidu → GitHub (low)
-  * "中文内容" → Baidu (85) → Google → GitHub → Bing → Tavily
-- "github": Search GitHub repositories (best for finding open source projects/code).
+  * "gemma model huggingface" → Hugging Face (95) → GitHub → Google → Bing
+  * "halo-gemma github repo" → GitHub (90) → GitLab → Google → Bing
+  * "python library gitlab" → GitLab (90) → GitHub → Hugging Face → Bing
+  * "llama model" → Hugging Face (80) → GitHub → GitLab → Bing
+  * "latest news" → Google/Bing (high) → Tavily → Baidu
+  * "中文内容" → Baidu (85) → Google → Bing
+- "huggingface": Search Hugging Face models/datasets (best for ML models, AI).
+- "github": Search GitHub repositories (best for open source code projects).
+- "gitlab": Search GitLab projects (alternative to GitHub).
 - "google": Use Google search (may require VPN/proxy in some regions).
 - "bing": Use Bing search (reliable international option).
 - "tavily": Use Tavily API (good fallback when scraping engines fail).
@@ -62,12 +66,12 @@ Returns: A list of search results, each with title, URL, and snippet.`,
         .optional()
         .describe('Maximum number of results to return (default: 8, max: 20)'),
       engine: z
-        .enum(['auto', 'bing', 'baidu', 'google', 'tavily', 'github'])
+        .enum(['auto', 'bing', 'baidu', 'google', 'tavily', 'github', 'gitlab', 'huggingface'])
         .optional()
         .describe(
           'Search engine to use. "auto" (default) automatically selects best engine based on query: ' +
-          'GitHub for code/repos, Google/Bing for general, Baidu for Chinese. Prefer "auto" for best results. ' +
-          'Specify an engine explicitly only when needed (e.g., "github" to only search repositories).'
+          'Hugging Face for ML models, GitHub/GitLab for code, Google/Bing for general, Baidu for Chinese. ' +
+          'Prefer "auto" for best results. Specify explicitly only when needed (e.g., "huggingface" for models only).'
         ),
     },
     async (args) => {

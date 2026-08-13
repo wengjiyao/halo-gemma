@@ -11,12 +11,14 @@ import { baiduEngine } from './baidu'
 import { googleEngine } from './google'
 import { tavilyEngine } from './tavily'
 import { githubEngine } from './github'
+import { gitlabEngine } from './gitlab'
+import { huggingfaceEngine } from './huggingface'
 
 // ============================================
 // Types
 // ============================================
 
-export type EngineName = 'bing' | 'baidu' | 'google' | 'tavily' | 'github'
+export type EngineName = 'bing' | 'baidu' | 'google' | 'tavily' | 'github' | 'gitlab' | 'huggingface'
 
 // ============================================
 // Engine Registry
@@ -35,6 +37,8 @@ const engines: Record<EngineName, SearchEngine> = {
   google: googleEngine,
   tavily: tavilyEngine,
   github: githubEngine,
+  gitlab: gitlabEngine,
+  huggingface: huggingfaceEngine,
 }
 
 /**
@@ -277,3 +281,5 @@ export { baiduEngine } from './baidu'
 export { googleEngine } from './google'
 export { tavilyEngine } from './tavily'
 export { githubEngine } from './github'
+export { gitlabEngine } from './gitlab'
+export { huggingfaceEngine } from './huggingface'
