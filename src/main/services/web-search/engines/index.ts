@@ -47,21 +47,56 @@ function getAutoSelectableEngines(): SearchEngine[] {
 // ============================================
 
 /**
- * Check if Google is available/reachable.
+ * Check if Google is available/reachable AND not showing CAPTCHA.
  * Used at startup to determine if Google should participate in automatic selection.
+ *
+ * Performs a real search to detect CAPTCHA, not just domain availability.
  */
 async function checkGoogleAvailability(): Promise<boolean> {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-    const response = await fetch('https://www.google.com', {
-      method: 'HEAD',
+    // Try a simple test search
+    const testUrl = 'https://www.google.com/search?q=test&hl=en&gl=us'
+    const response = await fetch(testUrl, {
+      method: 'GET',
       signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+      },
     })
 
     clearTimeout(timeoutId)
-    return response.ok
+
+    if (!response.ok) {
+      console.log('[WebSearch] Google availability check failed: HTTP', response.status)
+      return false
+    }
+
+    // Check response for CAPTCHA indicators
+    const html = await response.text()
+    const hasCaptcha =
+      html.includes('/sorry/') ||
+      html.includes('captcha') ||
+      html.includes('unusual traffic') ||
+      html.includes('consent.google') ||
+      html.includes('Before you continue')
+
+    if (hasCaptcha) {
+      console.log('[WebSearch] Google availability check failed: CAPTCHA detected')
+      return false
+    }
+
+    // Check if we got actual search results (has #search or #rso div)
+    const hasResults = html.includes('id="search"') || html.includes('id="rso"')
+
+    if (!hasResults) {
+      console.log('[WebSearch] Google availability check failed: No results container found')
+      return false
+    }
+
+    return true
   } catch (error) {
     console.log('[WebSearch] Google availability check failed:', (error as Error).message)
     return false

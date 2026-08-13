@@ -56,6 +56,95 @@ const VIEW_ID_PREFIX = 'web-search-'
 // ============================================
 
 /**
+ * Check if search results are relevant to the query.
+ *
+ * A result set is considered weak/irrelevant if:
+ * - The query contains specific compound terms (e.g. "halo-gemma")
+ * - But none of the results match those exact terms
+ *
+ * This helps detect when the engine split the query and returned
+ * results for only part of it (e.g., "halo" instead of "halo-gemma").
+ */
+function areResultsRelevant(query: string, results: SearchResult[]): boolean {
+  if (results.length === 0) return false
+
+  // Extract potential compound terms or specific identifiers from query
+  // Look for: hyphenated words, quoted terms, or distinctive terms
+  const compoundTerms = query.match(/[\w]+-[\w]+|"[^"]+"/g)
+
+  if (!compoundTerms || compoundTerms.length === 0) {
+    // No specific compound terms, accept any results
+    return true
+  }
+
+  // Check if at least one result contains the compound terms
+  const normalizedQuery = query.toLowerCase()
+  const hasExactMatch = results.some((result) => {
+    const searchText = `${result.title} ${result.url} ${result.snippet}`.toLowerCase()
+    return compoundTerms.some((term) => {
+      const cleanTerm = term.replace(/"/g, '').toLowerCase()
+      return searchText.includes(cleanTerm)
+    })
+  })
+
+  if (!hasExactMatch) {
+    console.log(
+      `[WebSearch] Results may not be relevant - query has specific terms (${compoundTerms.join(', ')}) ` +
+      `but none found in results`
+    )
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Merge and deduplicate results from multiple engines.
+ * Interleaves results and removes duplicates by normalized URL.
+ */
+function mergeResults(
+  primary: SearchResult[],
+  secondary: SearchResult[],
+  maxResults: number
+): SearchResult[] {
+  const seen = new Set<string>()
+  const merged: SearchResult[] = []
+
+  // Helper to normalize URL for deduplication
+  const normalizeUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url)
+      // Remove trailing slash and common tracking params
+      return parsed.origin + parsed.pathname.replace(/\/$/, '')
+    } catch {
+      return url
+    }
+  }
+
+  // Add from primary
+  for (const result of primary) {
+    const normalized = normalizeUrl(result.url)
+    if (!seen.has(normalized)) {
+      seen.add(normalized)
+      merged.push({ ...result, position: merged.length + 1 })
+      if (merged.length >= maxResults) break
+    }
+  }
+
+  // Add from secondary (fill remaining slots)
+  for (const result of secondary) {
+    if (merged.length >= maxResults) break
+    const normalized = normalizeUrl(result.url)
+    if (!seen.has(normalized)) {
+      seen.add(normalized)
+      merged.push({ ...result, position: merged.length + 1 })
+    }
+  }
+
+  return merged
+}
+
+/**
  * Create a promise that rejects after timeout
  */
 function withTimeout<T>(
@@ -131,9 +220,13 @@ export class WebSearchContext {
     // Track the first engine that returned a CAPTCHA — its guidance is more
     // actionable than a generic "no results" from a later fallback engine.
     let captchaEngine: SearchEngine | null = null
+    // Track first successful result set (may be weak/irrelevant)
+    let firstResults: SearchResult[] | null = null
+    let firstEngine: SearchEngine | null = null
 
     // Try each engine in order
-    for (const engine of engines) {
+    for (let i = 0; i < engines.length; i++) {
+      const engine = engines[i]
       lastEngine = engine
       try {
         console.log(`[WebSearch] Trying engine: ${engine.displayName}`)
@@ -144,11 +237,52 @@ export class WebSearchContext {
           const searchTime = Date.now() - startTime
           console.log(`[WebSearch] Success: ${outcome.results.length} results from ${engine.displayName} in ${searchTime}ms`)
 
-          return {
-            query,
-            engine: engine.name,
-            results: outcome.results,
-            searchTime,
+          // Check if results are relevant to the query
+          const isRelevant = areResultsRelevant(query, outcome.results)
+
+          if (!firstResults) {
+            // First successful result set
+            firstResults = outcome.results
+            firstEngine = engine
+
+            if (isRelevant) {
+              // Good results, return immediately
+              return {
+                query,
+                engine: engine.name,
+                results: outcome.results,
+                searchTime,
+              }
+            } else {
+              // Weak results - try next engine (if available) to merge
+              console.log(`[WebSearch] Results from ${engine.displayName} may be weak, trying next engine for merge`)
+
+              // Try next engine (preferably Tavily if available)
+              const nextEngine = engines[i + 1]
+              if (!nextEngine) {
+                // No more engines, return what we have
+                console.log(`[WebSearch] No more engines to try, returning ${firstResults.length} results from ${engine.displayName}`)
+                return {
+                  query,
+                  engine: engine.name,
+                  results: firstResults,
+                  searchTime,
+                }
+              }
+              // Continue to next engine
+              continue
+            }
+          } else {
+            // Second successful result set - merge with first
+            console.log(`[WebSearch] Merging results from ${firstEngine!.displayName} and ${engine.displayName}`)
+            const merged = mergeResults(firstResults, outcome.results, maxResults)
+
+            return {
+              query,
+              engine: `${firstEngine!.name}+${engine.name}`,
+              results: merged,
+              searchTime,
+            }
           }
         }
 
@@ -162,6 +296,18 @@ export class WebSearchContext {
         lastReason = 'unreachable'
         console.warn(`[WebSearch] ${engine.displayName} threw:`, (error as Error).message)
         // Continue to next engine
+      }
+    }
+
+    // If we got results from first engine but no second engine succeeded, return first results
+    if (firstResults && firstEngine) {
+      const searchTime = Date.now() - startTime
+      console.log(`[WebSearch] Returning ${firstResults.length} weak results from ${firstEngine.displayName} (no other engines succeeded)`)
+      return {
+        query,
+        engine: firstEngine.name,
+        results: firstResults,
+        searchTime,
       }
     }
 
