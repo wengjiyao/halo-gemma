@@ -204,6 +204,11 @@ export class WebSearchContext {
     maxResults: number,
     timeout: number
   ): Promise<EngineOutcome> {
+    // Handle API-based engines differently (no BrowserView needed)
+    if ((engine as any).isApiEngine) {
+      return this.executeApiEngineSearch(engine, query, maxResults, timeout)
+    }
+
     const viewId = generateViewId()
     this.activeViews.add(viewId)
 
@@ -284,6 +289,49 @@ export class WebSearchContext {
     } finally {
       // Always clean up the view
       await this.cleanupView(viewId)
+    }
+  }
+
+  /**
+   * Execute search with an API-based engine (e.g. Tavily).
+   *
+   * API engines make HTTP requests instead of loading pages in BrowserView.
+   * Returns a structured EngineOutcome.
+   */
+  private async executeApiEngineSearch(
+    engine: SearchEngine,
+    query: string,
+    maxResults: number,
+    timeout: number
+  ): Promise<EngineOutcome> {
+    try {
+      console.log(`[WebSearch] Executing API search with ${engine.displayName}`)
+
+      // Call the engine's executeApiSearch method with timeout
+      const resultsPromise = engine.executeApiSearch(query, maxResults)
+      const results = await withTimeout(
+        resultsPromise,
+        timeout,
+        `API search timeout for ${engine.displayName}`
+      )
+
+      if (!results || results.length === 0) {
+        console.log(`[WebSearch] ${engine.displayName} API returned no results`)
+        return { ok: false, reason: 'no_results' }
+      }
+
+      console.log(`[WebSearch] ${engine.displayName} API returned ${results.length} results`)
+      return { ok: true, results }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`[WebSearch] ${engine.displayName} API failed:`, message)
+
+      // Classify the error
+      if (message.includes('timeout')) {
+        return { ok: false, reason: 'unreachable' }
+      }
+      // Default to unreachable for API errors
+      return { ok: false, reason: 'unreachable' }
     }
   }
 

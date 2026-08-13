@@ -61,6 +61,7 @@ export {
   getAllEngines,
   getEngineNames,
   selectBestEngine,
+  initializeEngines,
   type EngineName,
 } from './engines'
 

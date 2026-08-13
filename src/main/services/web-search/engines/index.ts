@@ -9,12 +9,13 @@ import type { SearchEngine } from './base'
 import { bingEngine } from './bing'
 import { baiduEngine } from './baidu'
 import { googleEngine } from './google'
+import { tavilyEngine } from './tavily'
 
 // ============================================
 // Types
 // ============================================
 
-export type EngineName = 'bing' | 'baidu' | 'google'
+export type EngineName = 'bing' | 'baidu' | 'google' | 'tavily'
 
 // ============================================
 // Engine Registry
@@ -31,6 +32,7 @@ const engines: Record<EngineName, SearchEngine> = {
   bing: bingEngine,
   baidu: baiduEngine,
   google: googleEngine,
+  tavily: tavilyEngine,
 }
 
 /**
@@ -38,6 +40,90 @@ const engines: Record<EngineName, SearchEngine> = {
  */
 function getAutoSelectableEngines(): SearchEngine[] {
   return Object.values(engines).filter(engine => engine.autoSelectable)
+}
+
+// ============================================
+// Engine Initialization
+// ============================================
+
+/**
+ * Check if Google is available/reachable.
+ * Used at startup to determine if Google should participate in automatic selection.
+ */
+async function checkGoogleAvailability(): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000)
+
+    const response = await fetch('https://www.google.com', {
+      method: 'HEAD',
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+    return response.ok
+  } catch (error) {
+    console.log('[WebSearch] Google availability check failed:', (error as Error).message)
+    return false
+  }
+}
+
+/**
+ * Initialize search engines.
+ * Call this at app startup to:
+ * - Check Google availability and enable/disable auto-selection
+ * - Configure Tavily API key
+ * - Adjust engine priorities
+ *
+ * @param config - Optional configuration
+ */
+export async function initializeEngines(config?: {
+  tavilyApiKey?: string
+}): Promise<void> {
+  console.log('[WebSearch] Initializing search engines...')
+
+  // 1. Check Google availability
+  const googleAvailable = await checkGoogleAvailability()
+  console.log(`[WebSearch] Google available: ${googleAvailable}`)
+
+  if (googleAvailable) {
+    // Enable Google for automatic selection
+    // TypeScript: cast to mutable to override readonly property
+    ;(googleEngine as any).autoSelectable = true
+    // Adjust Google's priority: high for English, but respect Baidu for pure Chinese
+    ;(googleEngine as any).getPriorityScore = function(query: string): number {
+      const chineseChars = (query.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length
+      const totalChars = query.replace(/\s/g, '').length
+      if (totalChars === 0) return 90
+
+      const chineseRatio = chineseChars / totalChars
+      if (chineseRatio > 0.8) {
+        // Pure Chinese - let Baidu win (Baidu=85, Google=75)
+        return 75
+      } else if (chineseRatio > 0.5) {
+        // Mostly Chinese - Google still good but lower
+        return 80
+      } else {
+        // English/mixed - Google is best
+        return 95
+      }
+    }
+    console.log('[WebSearch] Google enabled as primary engine')
+  } else {
+    console.log('[WebSearch] Google disabled, Bing will be primary')
+  }
+
+  // 2. Configure Tavily API key
+  if (config?.tavilyApiKey) {
+    tavilyEngine.setApiKey(config.tavilyApiKey)
+    console.log('[WebSearch] Tavily API key configured')
+  } else {
+    // Disable Tavily if no API key
+    ;(tavilyEngine as any).autoSelectable = false
+    console.log('[WebSearch] Tavily disabled (no API key)')
+  }
+
+  console.log('[WebSearch] Initialization complete')
 }
 
 // ============================================
@@ -152,3 +238,4 @@ export { SearchEngine } from './base'
 export { bingEngine } from './bing'
 export { baiduEngine } from './baidu'
 export { googleEngine } from './google'
+export { tavilyEngine } from './tavily'

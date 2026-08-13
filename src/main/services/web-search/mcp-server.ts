@@ -28,8 +28,13 @@ function buildWebSearchTool() {
 This tool performs a real web search and returns structured results with titles, URLs, and snippets.
 
 Engines:
-- "auto" (default): Bing for English, Baidu for Chinese. This is the reliable default — prefer it.
-- "google": opt-in only. Use it when the task benefits from Google specifically (e.g. a comprehensive cross-source investigation) or when the user asks for Google. Google may be unreachable without a proxy; if it fails, this tool returns clear guidance — follow it (retry with another engine or ask the user), and tell the user what happened rather than silently substituting results.
+- "auto" (default): Automatically selects the best engine based on availability and query language.
+  Priority order: Google (if available) → Bing → Tavily → Baidu
+  Google is auto-detected at startup; if unreachable (no VPN/proxy), Bing becomes primary.
+- "google": Use Google search (may require VPN/proxy in some regions).
+- "bing": Use Bing search (reliable international option).
+- "tavily": Use Tavily API (good fallback when scraping engines fail).
+- "baidu": Use Baidu search (best for Chinese content, accessible in China).
 
 When to use:
 - Finding current information, news, or recent events
@@ -53,13 +58,12 @@ Returns: A list of search results, each with title, URL, and snippet.`,
         .optional()
         .describe('Maximum number of results to return (default: 8, max: 20)'),
       engine: z
-        .enum(['auto', 'bing', 'baidu', 'google'])
+        .enum(['auto', 'bing', 'baidu', 'google', 'tavily'])
         .optional()
         .describe(
-          'Search engine to use. "auto" (default) selects based on query language: ' +
-          'Bing for English, Baidu for Chinese. "google" is opt-in only (not used by ' +
-          '"auto"); choose it deliberately for Google-specific needs, and be aware it ' +
-          'may be unreachable without a proxy.'
+          'Search engine to use. "auto" (default) automatically selects best engine: ' +
+          'Google (if available) → Bing → Tavily → Baidu. Prefer "auto" for best results. ' +
+          'Specify an engine explicitly only when needed for specific requirements.'
         ),
     },
     async (args) => {

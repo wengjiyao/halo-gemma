@@ -42,7 +42,7 @@ import { registerPerfHandlers } from '../ipc/perf'
 import { registerGitBashHandlers, initializeGitBashOnStartup } from '../ipc/git-bash'
 import { cleanupAllCaches } from '../services/artifact-cache.service'
 import { flushSpaceActivity } from '../services/space.service'
-import { disposeSearchContext } from '../services/web-search'
+import { disposeSearchContext, initializeEngines } from '../services/web-search'
 import { markExtendedServicesReady } from './state'
 import { getMainWindow, sendToRenderer } from '../foundation/window.service'
 import { initializeHealthSystem, setSessionCleanupFn } from '../services/health'
@@ -267,6 +267,20 @@ export function initializeExtendedServices(): void {
     } catch (err) {
       console.warn(
         '[Bootstrap] Credential encryption migration failed:',
+        (err as Error).message,
+      )
+    }
+  })
+
+  // Initialize search engines: check Google availability and configure Tavily
+  registerIdleTask('initialize-search-engines', async () => {
+    try {
+      await initializeEngines({
+        tavilyApiKey: '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',
+      })
+    } catch (err) {
+      console.warn(
+        '[Bootstrap] Search engine initialization failed:',
         (err as Error).message,
       )
     }

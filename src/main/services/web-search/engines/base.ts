@@ -69,6 +69,16 @@ export abstract class SearchEngine {
    */
   readonly autoSelectable: boolean = true
 
+  /**
+   * Whether this engine uses API-based search instead of DOM scraping.
+   *
+   * API engines (e.g. Tavily) make HTTP requests to a search API and receive
+   * structured JSON results, instead of loading a web page in a BrowserView
+   * and extracting results from the DOM. When true, search-context will call
+   * executeApiSearch() instead of using the BrowserView execution path.
+   */
+  readonly isApiEngine: boolean = false
+
   // ============================================
   // URL Building
   // ============================================
@@ -286,5 +296,24 @@ export abstract class SearchEngine {
           `keywords, more general terms, or another engine.`
         )
     }
+  }
+
+  /**
+   * Execute API-based search (for engines with isApiEngine = true).
+   *
+   * API engines override this method to make HTTP requests to their search API
+   * and return structured results directly, bypassing the BrowserView DOM
+   * extraction path.
+   *
+   * @param query - Search query
+   * @param maxResults - Maximum results to return
+   * @returns Promise resolving to SearchResult array
+   * @throws Error if API request fails
+   */
+  async executeApiSearch(
+    query: string,
+    maxResults: number
+  ): Promise<SearchResult[]> {
+    throw new Error(`executeApiSearch not implemented for ${this.name}`)
   }
 }
